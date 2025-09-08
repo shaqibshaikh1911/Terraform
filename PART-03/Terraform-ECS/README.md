@@ -26,3 +26,49 @@ Customize the variables in `variables.tf` as needed for your environment. After 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more information.
+
+Commands I used in the Terminal
+
+# Authenticate with ECR (use your account ID from the output)
+aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 147997125448.dkr.ecr.us-west-2.amazonaws.com
+
+# Build and push Flask backend
+cd backend
+docker build -t flask-backend .
+docker tag flask-backend:latest 147997125448.dkr.ecr.us-west-2.amazonaws.com/flask-backend:latest
+docker push 147997125448.dkr.ecr.us-west-2.amazonaws.com/flask-backend:latest
+
+# Build and push Express frontend
+cd ../frontend  
+docker build -t express-frontend .
+docker tag express-frontend:latest 147997125448.dkr.ecr.us-west-2.amazonaws.com/express-frontend:latest
+docker push 147997125448.dkr.ecr.us-west-2.amazonaws.com/express-frontend:latest
+
+# Test Express frontend
+curl http://flask-express-app-alb-612002336.us-west-2.elb.amazonaws.com
+
+# Test Flask backend health check
+curl http://flask-express-app-alb-612002336.us-west-2.elb.amazonaws.com/api/health
+
+# Test Flask backend data endpoint
+curl http://flask-express-app-alb-612002336.us-west-2.elb.amazonaws.com/api/data
+
+# Test Flask backend greeting endpoint
+curl http://flask-express-app-alb-612002336.us-west-2.elb.amazonaws.com/api/greet/John
+
+Manual Cleanup 
+
+# Delete ECR repositories manually
+aws ecr delete-repository --repository-name flask-backend --force
+aws ecr delete-repository --repository-name express-frontend --force
+
+# Delete S3 bucket (after terraform destroy)
+aws s3 rb s3://aecinspire-terraform-state-2024 --force
+
+# Delete DynamoDB table
+aws dynamodb delete-table --table-name terraform-locks
+
+ Run Terraform Destroy
+
+ cd Terraforn-ECS
+terraform destroy
